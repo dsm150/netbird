@@ -358,6 +358,13 @@ func (c *Client) SetTraceLogLevel() {
 // GetStatusDetails return with the list of the PeerInfos
 func (c *Client) GetStatusDetails() *StatusDetails {
 
+	// The recorder only caches transfer counters and handshake times; nothing
+	// refreshes them on its own, so without this they read as zero. The Android
+	// client and the desktop daemon do the same before serving a peer status.
+	if err := c.recorder.RefreshWireGuardStats(); err != nil {
+		log.Debugf("failed to refresh WireGuard stats: %v", err)
+	}
+
 	fullStatus := c.recorder.GetFullStatus()
 
 	peerInfos := make([]PeerInfo, len(fullStatus.Peers))
